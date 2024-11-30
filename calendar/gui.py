@@ -1,7 +1,3 @@
-import tkinter as tk
-from tkinter import messagebox
-from tkinterdnd2 import DND_FILES, TkinterDnD
-import os
 import re
 from datetime import datetime, timedelta
 
@@ -90,7 +86,7 @@ def excute(path):
         result.extend(process_schedule(day_data, week_data, subject_data, teacher_data, id_class))
 
     def calculate_date(week_num, day_of_week):
-        start_date = datetime(2025, 1, 6)  
+        start_date = datetime(2025, 1, 6)
         days_to_add = (day_of_week - 1) + (week_num - 24) * 7
         return (start_date + timedelta(days=days_to_add))
 
@@ -136,8 +132,8 @@ def excute(path):
 
         rrule = vRecur({
             'FREQ': 'WEEKLY',
-            'WKST': daily[item['thu']],  
-            'UNTIL': end_datetime  
+            'WKST': daily[item['thu']],
+            'UNTIL': end_datetime
         })
 
         event.add('rrule', rrule)
@@ -148,29 +144,62 @@ def excute(path):
         f.write(cal.to_ical())
 
     print("Đã tạo file ICS thành công!")
+from PyQt6.QtWidgets import QApplication, QLabel, QMessageBox, QVBoxLayout, QWidget
+from PyQt6.QtGui import QDragEnterEvent, QDropEvent
+from PyQt6.QtCore import Qt
+import os
+class FileDropWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
 
-def on_drop(event):
-    """Xử lý sự kiện khi file được kéo thả vào."""
-    file_path = event.data.strip() 
-    if file_path.endswith(".xlsx"):
-        file_dir = os.path.dirname(file_path)
-        success_file = os.path.join(file_dir, "successfully.txt")
-        
-        try:
-            excute(file_dir)
-            messagebox.showinfo("Thông báo", "Finish")
-        except Exception as e:
-            messagebox.showerror("Lỗi", f"Không thể tạo file: {e}")
-    else:
-        messagebox.showerror("Lỗi", "File không hợp lệ! Vui lòng thả file .xlsx")
+    def init_ui(self):
+        self.setWindowTitle("Kéo và Thả File")
+        self.setGeometry(100, 100, 400, 200)
 
-root = TkinterDnD.Tk()  
-root.title("Kéo và Thả File")
-root.geometry("400x200")
-label = tk.Label(root, text="Kéo file .xlsx vào đây", font=("Arial", 14), fg="blue")
-label.pack(pady=50)
-root.drop_target_register(DND_FILES)
-root.dnd_bind("<<Drop>>", on_drop)
+        # Tạo giao diện hiển thị
+        layout = QVBoxLayout()
+        self.label = QLabel("Kéo file .xlsx vào đây", self)
+        self.label.setStyleSheet("font-size: 16px; color: blue;")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.label)
 
-root.mainloop()
+        self.setLayout(layout)
+
+        # Cho phép chấp nhận thả file
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """Xử lý sự kiện kéo vào."""
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        """Xử lý sự kiện thả file."""
+        urls = event.mimeData().urls()
+        if urls:
+            file_path = urls[0].toLocalFile()
+            if file_path.endswith(".xlsx"):
+                file_dir = os.path.dirname(file_path)
+                success_file = os.path.join(file_dir, "successfully.txt")
+
+                try:
+                    # Gọi hàm xử lý chính
+                    excute(file_dir)
+                    QMessageBox.information(self, "Thông báo", "Finish")
+                except Exception as e:
+                    QMessageBox.critical(self, "Lỗi", f"Không thể tạo file: {e}")
+            else:
+                QMessageBox.critical(self, "Lỗi", "File không hợp lệ! Vui lòng thả file .xlsx")
+
+
+if __name__ == "__main__":
+    import sys
+
+    app = QApplication(sys.argv)
+    main_window = FileDropWidget()
+    main_window.show()
+    sys.exit(app.exec())
 
