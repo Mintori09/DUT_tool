@@ -28,7 +28,7 @@ def process_schedule_optimized(data):
 
     # Hàm tính toán ngày bắt đầu dựa trên tuần và thứ
     def calculate_date(week_num, day_of_week):
-        start_date = datetime(2025, 1, 6)  # Tuần 24 bắt đầu từ ngày 06/01/2025
+        start_date = datetime(2025, 1, 5)  # Tuần 24 bắt đầu từ ngày 05/01/2025
         days_to_add = (day_of_week - 1) + (week_num - 24) * 7
         return start_date + timedelta(days=days_to_add)
 
